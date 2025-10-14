@@ -6,26 +6,26 @@ export const Altitude = ({ degrees }: { degrees: number }) => {
   return (
     <svg viewBox="0 0 100 100">
       <line
-        x1={10}
+        x1={0}
         y1={50}
-        x2={90}
+        x2={100}
         y2={50}
         strokeWidth="0.25"
         strokeLinecap="round"
-        strokeDasharray="1"
+        strokeDasharray="2 3"
         className="stroke-neutral-600"
       />
 
       <path
         d="M 50 10 A 40 40 0 0 1 90 50"
-        className="stroke-neutral-600"
+        className="stroke-neutral-600 fill-none"
         strokeWidth="2"
         id="above-horizon"
       />
 
       <path
         d="M 90 50 A 40 40 0 0 1 78.28 78.28"
-        className="stroke-neutral-600"
+        className="stroke-neutral-600 fill-none"
         strokeWidth="2"
         strokeDasharray="1"
         strokeDashoffset="1"
