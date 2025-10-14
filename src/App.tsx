@@ -8,6 +8,7 @@ const toDegrees = (radians: number) => radians * (180 / Math.PI)
 export const App = () => {
   const [now] = useState(new Date())
   const [coordinates, setCoordinates] = useState<GeolocationCoordinates | null>(null)
+  const [heading, setHeading] = useState<number | null>(null)
 
   useEffect(() => {
     if (!navigator.geolocation) return
@@ -31,12 +32,31 @@ export const App = () => {
     }
   }, [])
 
+  useEffect(() => {
+    const handleOrientation = ({ absolute, alpha, webkitCompassHeading }: DeviceOrientationEvent & { webkitCompassHeading?: number }) => {
+      if (webkitCompassHeading !== undefined) {
+        setHeading(webkitCompassHeading)
+      } else if (absolute && alpha !== null) {
+        setHeading(alpha)
+      }
+    }
+
+    const supportsAbsolute = Object.prototype.hasOwnProperty.call(window, 'ondeviceorientationabsolute')
+    const event = supportsAbsolute ? 'deviceorientationabsolute' : 'deviceorientation'
+
+    window.addEventListener(event, handleOrientation)
+
+    return () => {
+      window.removeEventListener(event, handleOrientation)
+    }
+  }, [])
+
   const times = useMemo(() => {
     if (!coordinates) return null
     return SunCalc.getMoonTimes(now, coordinates.latitude, coordinates.longitude)
   }, [now, coordinates])
 
-  const { altitudeDegrees, azimuthDegrees } = useMemo(() => {
+  const { azimuthDegrees } = useMemo(() => {
     if (!coordinates) {
       return { altitudeDegrees: 0, azimuthDegrees: 0 }
     }
@@ -49,7 +69,7 @@ export const App = () => {
     }
   }, [now, coordinates])
 
-  const { phase, phaseEmoji } = useMemo(() => {
+  const { phaseEmoji } = useMemo(() => {
     const { phase } = SunCalc.getMoonIllumination(now)
 
     let phaseEmoji = ''
@@ -86,7 +106,7 @@ export const App = () => {
 
       <div className="w-full">
         <Compass
-          degreesUp={coordinates?.heading || 0}
+          degreesUp={heading || coordinates?.heading || 0}
           degreesPointer={azimuthDegrees}
         />
       </div>
