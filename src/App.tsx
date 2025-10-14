@@ -2,13 +2,20 @@ import { useState, useEffect, useMemo } from 'react'
 import * as SunCalc from 'suncalc'
 import { Compass } from './Compass'
 import { format } from 'date-fns'
+import { Altitude } from './Altitude'
 
 const toDegrees = (radians: number) => radians * (180 / Math.PI)
 
 export const App = () => {
-  const [now] = useState(new Date())
+  const [now, setNow] = useState(new Date())
   const [coordinates, setCoordinates] = useState<GeolocationCoordinates | null>(null)
   const [heading, setHeading] = useState<number | null>(null)
+
+  useEffect(() => {
+    setInterval(() => {
+      setNow(new Date())
+    }, 60 * 1000)
+  }, [])
 
   useEffect(() => {
     if (!navigator.geolocation) return
@@ -33,11 +40,15 @@ export const App = () => {
   }, [])
 
   useEffect(() => {
-    const handleOrientation = ({ absolute, alpha, webkitCompassHeading }: DeviceOrientationEvent & { webkitCompassHeading?: number }) => {
+    const handleOrientation = ({
+      absolute,
+      alpha,
+      webkitCompassHeading
+    }: DeviceOrientationEvent & { webkitCompassHeading?: number }) => {
       if (webkitCompassHeading !== undefined) {
         setHeading(webkitCompassHeading)
       } else if (absolute && alpha !== null) {
-        setHeading(alpha)
+        setHeading(360 - alpha)
       }
     }
 
@@ -56,7 +67,7 @@ export const App = () => {
     return SunCalc.getMoonTimes(now, coordinates.latitude, coordinates.longitude)
   }, [now, coordinates])
 
-  const { azimuthDegrees } = useMemo(() => {
+  const { azimuthDegrees, altitudeDegrees } = useMemo(() => {
     if (!coordinates) {
       return { altitudeDegrees: 0, azimuthDegrees: 0 }
     }
@@ -95,20 +106,24 @@ export const App = () => {
   }, [now])
 
   return (
-    <main className="container mx-auto max-w-lg px-4 py-8">
+    <main className="container mx-auto flex max-w-lg flex-col px-4 pt-16">
       {times ? (
         <div className="mb-8 grid grid-cols-3 items-center gap-4 text-center">
-          <div className="text-2xl">↑ {format(times.rise, 'HH:mm')}</div>
-          <div className="text-6xl">{phaseEmoji}</div>
-          <div className="text-2xl">↓ {format(times.set, 'HH:mm')}</div>
+          {times.rise ? <div className="col-1 text-2xl">↑ {format(times.rise, 'HH:mm')}</div> : null}
+          <div className="col-2 text-6xl">{phaseEmoji}</div>
+          {times.set ? <div className="col-3 text-2xl">↓ {format(times.set, 'HH:mm')}</div> : null}
         </div>
       ) : null}
 
-      <div className="w-full">
+      <div className="mx-auto w-9/10">
         <Compass
           degreesUp={heading || coordinates?.heading || 0}
           degreesPointer={azimuthDegrees}
         />
+      </div>
+
+      <div className="mx-auto w-9/10">
+        <Altitude degrees={altitudeDegrees} />
       </div>
     </main>
   )

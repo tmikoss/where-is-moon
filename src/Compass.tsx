@@ -80,7 +80,6 @@ export const Compass = ({ degreesUp = 0, degreesPointer }: { degreesUp?: number;
         className="fill-none stroke-neutral-400 opacity-50"
       />
 
-      {/* Pointer line if degreesPointer is defined */}
       {degreesPointer !== undefined && (
         <line
           x1={centerX}
